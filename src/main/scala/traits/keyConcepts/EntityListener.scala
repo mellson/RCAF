@@ -1,4 +1,4 @@
-package traits
+package traits.keyConcepts
 
 trait EntityListener {
 

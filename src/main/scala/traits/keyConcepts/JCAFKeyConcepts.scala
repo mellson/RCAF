@@ -1,4 +1,4 @@
-package traits
+package traits.keyConcepts
 
 class JCAFKeyConcepts {
   trait Entity // Person, thing, place etc.
