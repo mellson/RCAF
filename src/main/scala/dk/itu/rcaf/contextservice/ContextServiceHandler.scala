@@ -1,41 +1,45 @@
 package dk.itu.rcaf.contextservice
 
-import akka.actor.{ActorRef, Props, Actor}
+import akka.actor.{ActorRef, Actor}
 import dk.itu.rcaf.abilities._
-import dk.itu.rcaf.contextclient.SimpleActorEntity
 import scala.collection.immutable.HashMap
 
 class ContextServiceHandler extends Actor {
-  var entityListeners: Map[String, List[ActorRef]] = HashMap.empty
+  var entityListeners: Map[ActorRef, List[ActorRef]] = HashMap.empty
   var classListeners: Map[Class[_], List[ActorRef]] = HashMap.empty
-
+  var contexts: Map[ActorRef, Context] = HashMap.empty
 
   override def receive: Receive = {
-//    case event: ContextEvent => AddClassListener(new ActorEntity, this.getClass)
+    //    case event: ContextEvent => AddClassListener(new ActorEntity, this.getClass)
 
-    case notifyListeners: NotifyListeners =>
-      for { (id, listeners) <- entityListeners
-        if id == notifyListeners.entityId
-      } listeners foreach(_ ! notifyListeners)
+    case msg: AddContextItem =>
+//      msg.
+      self ! NotifyListeners(msg.entityRef, msg.clazz)
 
-      for { (clazz, listeners) <- classListeners
-            if clazz == notifyListeners.clazz
-      } listeners foreach(_ ! notifyListeners)
+    case msg: NotifyListeners =>
+      entityListeners.filter(_._1 == msg.subject).foreach(_._2.foreach(_ ! msg))
+      classListeners.filter(_._1 == msg.clazz).foreach(_._2.foreach(_ ! msg))
 
-    case addClassListener: AddClassListener =>
-      val clazz = addClassListener.clazz
-      val listenerRef = addClassListener.listener
-      classListeners get clazz match {
-        case None => classListeners = classListeners ++ Map(clazz -> List(listenerRef))
-        case Some(listeners) => classListeners = classListeners ++ Map(clazz -> (listenerRef :: listeners))
+    case msg: AddClassListener =>
+      val listeners = classListeners getOrElse(msg.clazz, Nil)
+      classListeners = classListeners ++ Map(msg.clazz -> (msg.listener :: listeners))
+
+    case msg: RemoveClassListener =>
+      classListeners get msg.clazz match {
+        case None =>
+        case Some(listeners) =>
+          classListeners = classListeners ++ Map(msg.clazz -> listeners.filterNot(_ == msg.listener))
       }
 
-    case addEntityListener: AddEntityListener =>
-      val entityId = addEntityListener.entityId
-      val listenerRef = addEntityListener.listener
-      entityListeners get entityId match {
-        case None => entityListeners = entityListeners ++ Map(entityId -> List(listenerRef))
-        case Some(listeners) => entityListeners = entityListeners ++ Map(entityId -> (listenerRef :: listeners))
+    case msg: AddEntityListener =>
+      val listeners = entityListeners getOrElse(msg.subject, Nil)
+      entityListeners = entityListeners ++ Map(msg.subject -> (sender :: listeners))
+
+    case msg: RemoveEntityListener =>
+      entityListeners get msg.subject match {
+        case None =>
+        case Some(listeners) =>
+          entityListeners = entityListeners ++ Map(msg.subject -> listeners.filterNot(_ == sender))
       }
   }
 }
