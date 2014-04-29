@@ -4,23 +4,30 @@ import akka.actor._
 import com.typesafe.config.ConfigFactory
 import dk.itu.rcaf.contextclient.SimpleActorEntity
 import dk.itu.rcaf.abilities._
-import dk.itu.rcaf.example.TimeSensor
+import dk.itu.rcaf.example.TimeMonitor
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object ContextClient extends App {
   val config = ConfigFactory.load("context_client.conf")
   val system = ActorSystem("ContextClient", config)
-  val pathToContextServiceHandler = "akka.tcp://ContextService@0.0.0.0:2552/user/handler"
+  val protocol = config.getString("backend.protocol")
+  val systemName = config.getString("backend.system")
+  val pathToContextServiceHandler = s"$protocol://$systemName@0.0.0.0:2552/user/handler"
   val contextService = system.actorSelection(pathToContextServiceHandler)
 
-  val timeActor = system.actorOf(Props[TimeSensor], "TimeSensor")
-  val actor1 = system.actorOf(Props[SimpleActorEntity], "actor1")
-  val actor2 = system.actorOf(Props[SimpleActorEntity], "actor2")
-  val actor3 = system.actorOf(Props[SimpleActorEntity], "actor3")
+  val timeMonitor = system.actorOf(Props[TimeMonitor], "TimeMonitor")
+  val simpleActorEntity1 = system.actorOf(Props[SimpleActorEntity], "SimpleActorEntity1")
+  val simpleActorEntity2 = system.actorOf(Props[SimpleActorEntity], "SimpleActorEntity2")
+  val simpleActorEntity3 = system.actorOf(Props[SimpleActorEntity], "SimpleActorEntity3")
 
-  contextService tell(AddClassListener(actor1, classOf[TimeSensor]), actor1)
-  contextService tell(AddClassListener(actor2, classOf[TimeSensor]), actor2)
-  contextService tell(AddClassListener(actor3, classOf[SimpleActorEntity]), actor3)
+  contextService tell(AddClassListener(simpleActorEntity1, classOf[TimeMonitor]), simpleActorEntity1)
+  contextService tell(AddEntityListener(simpleActorEntity3), simpleActorEntity2)
+  contextService tell(NotifyListeners(simpleActorEntity3, classOf[SimpleActorEntity]), simpleActorEntity3)
 
-  contextService tell(AddEntityListener(actor3), actor2)
-  contextService tell(NotifyListeners(actor3, classOf[SimpleActorEntity]), actor3)
+  import scala.concurrent.duration._
+  system.scheduler.scheduleOnce(11 seconds, new NotifyRunner2)
+
+  class NotifyRunner2 extends Runnable {
+    override def run(): Unit = simpleActorEntity1 tell(RemoveAllListener, simpleActorEntity1)
+  }
 }

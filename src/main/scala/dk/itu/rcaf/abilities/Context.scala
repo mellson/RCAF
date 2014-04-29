@@ -2,7 +2,7 @@ package dk.itu.rcaf.abilities
 
 import scala.collection.immutable.Iterable
 
-case class Context(id: String) {
+case class Context(entity: Entity) {
   private var context: Map[Relationship, ContextItem] = Map.empty
 
   def setContextItem(relation: Relationship, item: ContextItem) = context = context ++ Map(relation -> item)
