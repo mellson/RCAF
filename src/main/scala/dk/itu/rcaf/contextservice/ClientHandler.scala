@@ -5,7 +5,7 @@ import dk.itu.rcaf.abilities._
 import scala.collection.immutable.HashMap
 import akka.actor.Stash
 
-class ContextServiceHandler extends Actor with Stash {
+class ClientHandler extends Actor with Stash {
   var entityListeners: Map[ActorRef, List[ActorRef]] = HashMap.empty
   var classListeners: Map[Class[_], List[ActorRef]] = HashMap.empty
 
