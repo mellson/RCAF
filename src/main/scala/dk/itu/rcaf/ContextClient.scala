@@ -12,7 +12,8 @@ object ContextClient extends App {
   val system = ActorSystem("ContextClient", config)
   val protocol = config.getString("backend.protocol")
   val systemName = config.getString("backend.system")
-  val pathToContextServiceHandler = s"$protocol://$systemName@0.0.0.0:2552/user/handler"
+  val host = config.getString("backend.host")
+  val pathToContextServiceHandler = s"$protocol://$systemName@$host:2552/user/handler"
   val contextService = system.actorSelection(pathToContextServiceHandler)
 
   val clientName = args.headOption.getOrElse("UnnamedClient")

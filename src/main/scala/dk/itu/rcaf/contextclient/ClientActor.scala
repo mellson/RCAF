@@ -6,7 +6,7 @@ import dk.itu.rcaf.example.TimeMonitor
 import dk.itu.rcaf.abilities._
 
 class ClientActor extends Actor  {
-  contextService ! ConnectMe
+  contextService ! Connect
 
   val timeMonitor = context.actorOf(Props[TimeMonitor], "TimeMonitor")
   val simpleActorEntity1 = context.actorOf(Props[SimpleActorEntity], "SimpleActorEntity1")

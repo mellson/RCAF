@@ -19,8 +19,8 @@ class ClientHandler extends Actor with Stash {
       self ! NotifyListeners(msg.entity.self, msg.clazz)
 
     case msg: NotifyListeners =>
-      entityListeners.filter(_._1 == msg.subject).foreach(_._2.foreach(_ ! msg))
-      classListeners.filter(_._1 == msg.clazz).foreach(_._2.foreach(_ ! msg))
+      entityListeners.filter(_._1 == msg.subject).foreach(_._2.foreach(_ forward msg))
+      classListeners.filter(_._1 == msg.clazz).foreach(_._2.foreach(_ forward msg))
 
     case msg: AddClassListener =>
       val listeners = classListeners getOrElse(msg.clazz, Nil)
