@@ -1,9 +1,11 @@
 package dk.itu.rcaf.contextclient
 
-import akka.actor.{Props, Actor}
+import akka.actor.{ActorSystem, Props, Actor}
 import dk.itu.rcaf.ContextClient.contextService
-import dk.itu.rcaf.example.TimeMonitor
 import dk.itu.rcaf.abilities._
+import spray.http._
+import spray.client.pipelining._
+import scala.concurrent.Future
 
 class ClientActor extends Actor  {
   contextService ! Connect
@@ -16,6 +18,15 @@ class ClientActor extends Actor  {
   contextService tell(AddClassListener(simpleActorEntity1, classOf[TimeMonitor]), simpleActorEntity1)
   contextService tell(AddEntityListener(simpleActorEntity3), simpleActorEntity2)
   contextService tell(NotifyListeners(simpleActorEntity3, classOf[SimpleActorEntity]), simpleActorEntity3)
+
+  val blipMonitor = context.actorOf(Props[BlipMonitor], "BlipMonitor")
+
+
+  implicit val system = ActorSystem()
+  import system.dispatcher
+  val pipeline: HttpRequest => Future[HttpResponse] = sendReceive
+  val response: Future[HttpResponse] = pipeline(Get("http://google.dk/"))
+  response.map(x => println(x))
 
   override def receive: Receive = {
     case msg => println("client received " + msg)

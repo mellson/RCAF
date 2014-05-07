@@ -1,5 +1,3 @@
 package dk.itu.rcaf.abilities
 
-trait Relationship {
-
-}
+abstract class Relationship

@@ -5,7 +5,7 @@ import akka.actor.Actor
 trait Entity extends Actor with ContextItem {
   val id: String = self.path.name
 
-//  def getContext: Context
+  val getContext: Context = Context(this)
 
   def notifyListeners() = contextService ! NotifyListeners(self, getClass)
 }

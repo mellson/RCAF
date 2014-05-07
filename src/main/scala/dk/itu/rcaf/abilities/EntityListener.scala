@@ -2,9 +2,6 @@ package dk.itu.rcaf.abilities
 
 import akka.actor.Actor
 
-case object StartListening
-case object StopListening
-
 trait EntityListener extends Actor with ContextItem {
   import context._
 
