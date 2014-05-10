@@ -2,7 +2,6 @@ package dk.itu.rcaf.contextservice
 
 import akka.actor.{Props, ActorRef, Actor}
 import dk.itu.rcaf.abilities.Connect
-import akka.pattern.pipe
 
 class RootHandler extends Actor {
   var clientToHandlers: Map[ActorRef, ActorRef] = Map.empty

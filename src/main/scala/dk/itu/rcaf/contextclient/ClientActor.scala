@@ -6,13 +6,13 @@ import dk.itu.rcaf.abilities._
 import spray.http._
 import spray.client.pipelining._
 import scala.concurrent.Future
-import dk.itu.rcaf.GuiActor
+import dk.itu.rcaf.GuiUpdater
 
 class ClientActor extends Actor  {
   contextService ! Connect
 
   val timeMonitor = context.actorOf(Props[TimeMonitor], "TimeMonitor")
-  val guiActor = context.actorOf(Props[GuiActor], "GuiActor")
+  val guiActor = context.actorOf(Props[GuiUpdater], "GuiActor")
   val simpleActorEntity1 = context.actorOf(Props[SimpleActorEntity], "SimpleActorEntity1")
   val simpleActorEntity2 = context.actorOf(Props[SimpleActorEntity], "SimpleActorEntity2")
   val simpleActorEntity3 = context.actorOf(Props[SimpleActorEntity], "SimpleActorEntity3")
