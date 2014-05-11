@@ -1,6 +1,7 @@
 package dk.itu.rcaf.abilities
 
 import scala.concurrent.duration._
+import akka.actor.Cancellable
 
 /**
  * Extension of the AbstractMonitor trait.
@@ -10,17 +11,19 @@ import scala.concurrent.duration._
 abstract case class AbstractTimedMonitor(interval: FiniteDuration) extends AbstractMonitor {
   import context._
 
-  /**
-   * Create a recurring function by taking the run function from AbstractMonitor.
-   * Call this function now and after that at the interval defined indefinitely.
-   */
-  system.scheduler.schedule(0 seconds, interval, new MonitorRunner(run))
+  private var scheduler: Cancellable = _
 
-  /**
-   * Wrapper function that calls the provided function.
-   * @param function this is the function you wish to be run indefinitely.
-   */
-  class MonitorRunner(function: () => Unit) extends Runnable {
-    override def run(): Unit = function()
+  override def preStart(): Unit = {
+    import scala.concurrent.duration._
+    scheduler = context.system.scheduler.schedule(
+      initialDelay = 0 seconds,
+      interval = interval,
+      receiver = self,
+      message = Run
+    )
+  }
+
+  override def postStop(): Unit = {
+    scheduler.cancel()
   }
 }

@@ -8,29 +8,24 @@ import scala.swing._
 import java.awt.Color
 import dk.itu.rcaf.abilities.AddClassListener
 import scala.util.Random
+import dk.itu.rcaf.example.Room
 
 object Simulator extends SimpleSwingApplication {
-  lazy val label = new Label {
-    text = "Hej"
-    foreground = Color.white
-  }
-
-  lazy val persons: List[Person] = (for (i <- 1 to 10) yield new Person).toList
-
-//  lazy val circle = new Ci
+  val numberOfPersonsInRoom = 10
+  lazy val rooms: List[Room] = List(
+    new Room((for (i <- 1 to numberOfPersonsInRoom) yield new Person).toList, "Grønt"),
+    new Room((for (i <- 1 to numberOfPersonsInRoom) yield new Person).toList, "Brød"),
+    new Room((for (i <- 1 to numberOfPersonsInRoom) yield new Person).toList, "Kolonial"),
+    new Room((for (i <- 1 to numberOfPersonsInRoom) yield new Person).toList, "Kasse"))
 
   def top = new MainFrame {
     title = "Superbrugsen Zimulator"
     preferredSize = maximumSize // new Dimension(700, 400)
 
-//    val verticalBox = new BoxPanel(Orientation.Vertical)
-
-    contents = new BoxPanel(Orientation.Horizontal) {
-//      contents += label
-      for (person <- persons)
-        contents += person
-//      border = Swing.EmptyBorder(20)
-      background = Color.BLACK
+    val squared = math.sqrt(rooms.size).toInt
+    contents = new GridPanel(squared,squared) {
+      for (room <- rooms)
+        contents += room
     }
   }
 
@@ -40,9 +35,9 @@ object Simulator extends SimpleSwingApplication {
 
   val timeMonitor = system.actorOf(Props[TimeMonitor], "TimeMonitor")
   val guiActor = system.actorOf(Props[GuiUpdater], "GuiActor")
-  val simpleActorEntity1 = system.actorOf(Props[SimpleActorEntity], "SimpleActorEntity1")
+//  val simpleActorEntity1 = system.actorOf(Props[SimpleActorEntity], "SimpleActorEntity1")
 
-  handler tell(AddClassListener(simpleActorEntity1, classOf[TimeMonitor]), simpleActorEntity1)
+//  handler tell(AddClassListener(simpleActorEntity1, classOf[TimeMonitor]), simpleActorEntity1)
   handler tell(AddClassListener(guiActor, classOf[TimeMonitor]), guiActor)
 }
 
@@ -50,19 +45,38 @@ class GuiUpdater extends Entity {
   override def receive: Receive = {
     case msg =>
       Swing.onEDT {
-//        Simulator.label.text = Simulator.label.text + "."
-        for (person <- Simulator.persons) {
-          person.move(getRandomInt,getRandomInt)
-          if (getRandomInt == 0)
-            person.becomeAngry()
-          if (getRandomInt == 3)
-            person.becomeHappy()
+        for (room <- Simulator.rooms) {
+          if (!room.showing) // TODO Dont move persons before the graphics is on screen
+            println("not yet")
+          else {
+            for (person <- room.persons) {
+              val x = person.x + getRandomInt
+              val y = person.y + 0
+              println(s"person x:${person.x}, y:${person.y} - in room x:${room.bounds.getX}, y:${room.bounds.getY}")
+              val width = room.bounds.getWidth
+              val height = room.bounds.getHeight
+              if (x >= width) {
+                room.persons = room.persons diff List(person)
+                val index = Simulator.rooms.indexOf(room)
+                if (Simulator.rooms.size > index + 1) {
+                  Simulator.rooms(index + 1).persons =  person :: Simulator.rooms(index).persons
+                  person.move(getRandomInt,0)
+                }
+              } else
+                person.move(x,y)
+              if (getRandomInt == 0)
+                person.becomeAngry()
+              if (getRandomInt == 3)
+                person.becomeHappy()
+              room.repaint()
+            }
+          }
         }
       }
   }
 
   def getRandomInt: Int = {
-    val i = Random.nextInt(6)
+    val i = Random.nextInt(10)
     val b = Random.nextInt(3)
     if (b > 1) -1 * i else i
   }

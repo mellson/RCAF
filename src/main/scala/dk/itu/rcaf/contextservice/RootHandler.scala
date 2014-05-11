@@ -8,9 +8,9 @@ class RootHandler extends Actor {
 
   override def receive: Receive = {
     case Connect =>
-      println(sender() + " connected")
-      clientToHandlers get sender() match {
-        case None => clientToHandlers = clientToHandlers ++ Map(sender() -> context.actorOf(Props[ClientHandler]))
+      println(sender + " connected")
+      clientToHandlers get sender match {
+        case None => clientToHandlers = clientToHandlers ++ Map(sender -> context.actorOf(Props[ClientHandler]))
         case Some(actorRef) =>
       }
 

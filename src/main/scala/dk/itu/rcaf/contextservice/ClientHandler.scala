@@ -37,19 +37,19 @@ class ClientHandler extends Actor with Stash {
 
     case msg: AddEntityListener =>
       val listeners = entityListeners getOrElse(msg.subject, Nil)
-      entityListeners = entityListeners ++ Map(msg.subject -> (sender() :: listeners))
-      sender() ! StartListening
+      entityListeners = entityListeners ++ Map(msg.subject -> (sender :: listeners))
+      sender ! StartListening
 
     case msg: RemoveEntityListener =>
       entityListeners get msg.subject match {
         case None =>
         case Some(listeners) =>
-          entityListeners = entityListeners ++ Map(msg.subject -> listeners.filterNot(_ == sender()))
-          sender() ! StopListening
+          entityListeners = entityListeners ++ Map(msg.subject -> listeners.filterNot(_ == sender))
+          sender ! StopListening
       }
 
     case RemoveAllListener =>
-      entityListeners.filter(_._2.contains(sender())).foreach(x => self tell(RemoveEntityListener(x._1), sender()))
-      classListeners.filter(_._2.contains(sender())).foreach(x => self tell(RemoveClassListener(sender(), x._1), sender()))
+      entityListeners.filter(_._2.contains(sender)).foreach(x => self tell(RemoveEntityListener(x._1), sender))
+      classListeners.filter(_._2.contains(sender)).foreach(x => self tell(RemoveClassListener(sender, x._1), sender))
   }
 }
