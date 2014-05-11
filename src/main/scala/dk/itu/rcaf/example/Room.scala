@@ -5,8 +5,6 @@ import java.awt.{Color, Graphics2D}
 import dk.itu.rcaf.Person
 
 case class Room(var persons: List[Person], roomName: String) extends FlowPanel {
-  val personSize = 20
-
   val label = new Label { foreground = Color.white }
 
   contents += label
@@ -17,8 +15,9 @@ case class Room(var persons: List[Person], roomName: String) extends FlowPanel {
     label.text = roomName + " : " + persons.size
 
     for (person <- persons) {
+      person.readyToMove = true
       g.setColor(person.moodColor)
-      g.fillOval(person.x, person.y, personSize, personSize)
+      g.fillOval(person.x, person.y, person.size, person.size)
     }
   }
 }

@@ -1,33 +1,34 @@
 package dk.itu.rcaf
 
 import akka.actor._
-import dk.itu.rcaf.contextclient.{SimpleActorEntity, TimeMonitor}
+import dk.itu.rcaf.contextclient.TimeMonitor
 import dk.itu.rcaf.abilities._
 import dk.itu.rcaf.contextservice.RootHandler
 import scala.swing._
-import java.awt.Color
 import dk.itu.rcaf.abilities.AddClassListener
 import scala.util.Random
 import dk.itu.rcaf.example.Room
 
 object Simulator extends SimpleSwingApplication {
-  val numberOfPersonsInRoom = 10
+  val numberOfPersonsInRoom = 100
   lazy val rooms: List[Room] = List(
     new Room((for (i <- 1 to numberOfPersonsInRoom) yield new Person).toList, "Grønt"),
-    new Room((for (i <- 1 to numberOfPersonsInRoom) yield new Person).toList, "Brød"),
-    new Room((for (i <- 1 to numberOfPersonsInRoom) yield new Person).toList, "Kolonial"),
-    new Room((for (i <- 1 to numberOfPersonsInRoom) yield new Person).toList, "Kasse"))
+    new Room((for (i <- 1 to 0) yield new Person).toList, "Brød"),
+    new Room((for (i <- 1 to 0) yield new Person).toList, "Kolonial"),
+    new Room((for (i <- 1 to 0) yield new Person).toList, "Kasse"))
 
   def top = new MainFrame {
     title = "Superbrugsen Zimulator"
-    preferredSize = maximumSize // new Dimension(700, 400)
+//    preferredSize = new Dimension(600, 400)
+    preferredSize = maximumSize
 
     val squared = math.sqrt(rooms.size).toInt
-    contents = new GridPanel(squared,squared) {
+    contents = new GridPanel(squared, squared) {
       for (room <- rooms)
         contents += room
     }
   }
+
 
   val system = ActorSystem("ActorSystem")
   val handler = system.actorOf(Props[RootHandler], "handler")
@@ -35,44 +36,58 @@ object Simulator extends SimpleSwingApplication {
 
   val timeMonitor = system.actorOf(Props[TimeMonitor], "TimeMonitor")
   val guiActor = system.actorOf(Props[GuiUpdater], "GuiActor")
-//  val simpleActorEntity1 = system.actorOf(Props[SimpleActorEntity], "SimpleActorEntity1")
+  //  val simpleActorEntity1 = system.actorOf(Props[SimpleActorEntity], "SimpleActorEntity1")
 
-//  handler tell(AddClassListener(simpleActorEntity1, classOf[TimeMonitor]), simpleActorEntity1)
+  //  handler tell(AddClassListener(simpleActorEntity1, classOf[TimeMonitor]), simpleActorEntity1)
   handler tell(AddClassListener(guiActor, classOf[TimeMonitor]), guiActor)
 }
 
 class GuiUpdater extends Entity {
+
+  def exitRoom(person: Person, room: Room) = room.persons = room.persons.filter(_ != person)
+
   override def receive: Receive = {
     case msg =>
       Swing.onEDT {
-        for (room <- Simulator.rooms) {
-          if (!room.showing) // TODO Dont move persons before the graphics is on screen
-            println("not yet")
-          else {
-            for (person <- room.persons) {
-              val x = person.x + getRandomInt
-              val y = person.y + 0
-              println(s"person x:${person.x}, y:${person.y} - in room x:${room.bounds.getX}, y:${room.bounds.getY}")
-              val width = room.bounds.getWidth
-              val height = room.bounds.getHeight
-              if (x >= width) {
-                room.persons = room.persons diff List(person)
-                val index = Simulator.rooms.indexOf(room)
-                if (Simulator.rooms.size > index + 1) {
-                  Simulator.rooms(index + 1).persons =  person :: Simulator.rooms(index).persons
-                  person.move(getRandomInt,0)
-                }
-              } else
-                person.move(x,y)
-              if (getRandomInt == 0)
-                person.becomeAngry()
-              if (getRandomInt == 3)
-                person.becomeHappy()
-              room.repaint()
-            }
-          }
+        for {
+          room <- Simulator.rooms
+          person <- room.persons
+          if person.readyToMove
+        } {
+          val x = person.x + getRandomInt
+          val y = person.y + 0
+          val width = room.bounds.getWidth
+          val height = room.bounds.getHeight
+
+          if (x <= 0)          moveToPreviousRoom(person, room)
+          else if (x >= width) moveToNextRoom(person, room)
+          else                 person.move(x, y)
+
+//          if (getRandomInt == 0)
+//            person.becomeAngry()
+//          if (getRandomInt == 3)
+//            person.becomeHappy()
         }
+        Simulator.rooms.foreach(_.repaint())
       }
+  }
+
+  def moveToNextRoom(person: Person, room: Room) {
+    val nextRoomIndex = Simulator.rooms.indexOf(room) + 1
+    if (Simulator.rooms.size > nextRoomIndex) {
+      Simulator.rooms(nextRoomIndex).persons = person :: Simulator.rooms(nextRoomIndex).persons
+      exitRoom(person, room)
+      person.move(getRandomInt, 0)
+    } else exitRoom(person, room)
+  }
+
+  def moveToPreviousRoom(person: Person, room: Room) {
+    val previousRoomIndex = Simulator.rooms.indexOf(room) - 1
+    if (previousRoomIndex >= 0) {
+      Simulator.rooms(previousRoomIndex).persons = person :: Simulator.rooms(previousRoomIndex).persons
+      exitRoom(person, room)
+      person.move(room.bounds.getWidth.toInt-person.size, 0)
+    } else exitRoom(person, room)
   }
 
   def getRandomInt: Int = {
