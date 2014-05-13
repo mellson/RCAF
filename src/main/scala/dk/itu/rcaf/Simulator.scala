@@ -57,7 +57,7 @@ class GuiUpdater extends Entity {
           val x = person.x + getRandomInt
           val y = person.y + 0
           val width = room.bounds.getWidth
-          val height = room.bounds.getHeight
+//          val height = room.bounds.getHeight
 
           if (x <= 0)          moveToPreviousRoom(person, room)
           else if (x >= width) moveToNextRoom(person, room)
