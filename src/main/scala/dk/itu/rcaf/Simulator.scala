@@ -29,10 +29,8 @@ object Simulator extends SimpleSwingApplication {
     }
   }
 
-
   val system = ActorSystem("ActorSystem")
   val handler = system.actorOf(Props[RootHandler], "handler")
-  handler ! Connect
 
   val timeMonitor = system.actorOf(Props[TimeMonitor], "TimeMonitor")
   val guiActor = system.actorOf(Props[GuiUpdater], "GuiActor")

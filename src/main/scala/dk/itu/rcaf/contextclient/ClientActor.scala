@@ -9,18 +9,16 @@ import scala.concurrent.Future
 import dk.itu.rcaf.GuiUpdater
 
 class ClientActor extends Actor  {
-  contextService ! Connect
-
   val timeMonitor = context.actorOf(Props[TimeMonitor], "TimeMonitor")
   val guiActor = context.actorOf(Props[GuiUpdater], "GuiActor")
-  val simpleActorEntity1 = context.actorOf(Props[SimpleActorEntity], "SimpleActorEntity1")
-  val simpleActorEntity2 = context.actorOf(Props[SimpleActorEntity], "SimpleActorEntity2")
-  val simpleActorEntity3 = context.actorOf(Props[SimpleActorEntity], "SimpleActorEntity3")
+  val simpleActorEntity1 = context.actorOf(Props[SimpleEntity], "SimpleActorEntity1")
+  val simpleActorEntity2 = context.actorOf(Props[SimpleEntity], "SimpleActorEntity2")
+  val simpleActorEntity3 = context.actorOf(Props[SimpleEntity], "SimpleActorEntity3")
 
   contextService tell(AddClassListener(simpleActorEntity1, classOf[TimeMonitor]), simpleActorEntity1)
   contextService tell(AddClassListener(simpleActorEntity1, classOf[TimeMonitor]), guiActor)
   contextService tell(AddEntityListener(simpleActorEntity3), simpleActorEntity2)
-  contextService tell(NotifyListeners(simpleActorEntity3, classOf[SimpleActorEntity]), simpleActorEntity3)
+  contextService tell(NotifyListeners(simpleActorEntity3, classOf[SimpleEntity]), simpleActorEntity3)
 
   implicit val system = ActorSystem()
   import system.dispatcher

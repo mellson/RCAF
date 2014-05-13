@@ -4,8 +4,6 @@ import akka.actor.ActorRef
 
 case object Run
 
-case object Connect
-
 case object StartListening
 
 case object StopListening
