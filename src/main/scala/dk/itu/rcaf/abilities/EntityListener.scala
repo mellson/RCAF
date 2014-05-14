@@ -10,7 +10,7 @@ trait EntityListener extends Actor with ContextItem {
   }
 
   def listen: Receive = {
-    case msg: NotifyListeners => // println(s"Monitor $id got msg from ${msg.subject.path.name}")
+    case msg: NotifyListeners => println(s"$id was notified by ${msg.subject.path.name}")
     case StopListening => become(receive)
     case RemoveAllListener => contextService ! RemoveAllListener
   }

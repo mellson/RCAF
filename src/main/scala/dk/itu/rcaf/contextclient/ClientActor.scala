@@ -1,32 +1,26 @@
 package dk.itu.rcaf.contextclient
 
-import akka.actor.{ActorSystem, Props, Actor}
+import akka.actor.{Props, Actor}
 import dk.itu.rcaf.ContextClient.contextService
 import dk.itu.rcaf.abilities._
-import spray.http._
-import spray.client.pipelining._
-import scala.concurrent.Future
-import dk.itu.rcaf.GuiUpdater
+import scala.concurrent.duration._
 
 class ClientActor extends Actor  {
-  val timeMonitor = context.actorOf(Props[TimeMonitor], "TimeMonitor")
-  val guiActor = context.actorOf(Props[GuiUpdater], "GuiActor")
-  val simpleActorEntity1 = context.actorOf(Props[SimpleEntity], "SimpleActorEntity1")
-  val simpleActorEntity2 = context.actorOf(Props[SimpleEntity], "SimpleActorEntity2")
-  val simpleActorEntity3 = context.actorOf(Props[SimpleEntity], "SimpleActorEntity3")
+  val timeMonitor = context actorOf Props[TimeMonitor]
+  val simpleEntity = context actorOf Props[SimpleEntity]
+  contextService ! AddClassListener(simpleEntity, classOf[TimeMonitor])
 
-  contextService tell(AddClassListener(simpleActorEntity1, classOf[TimeMonitor]), simpleActorEntity1)
-  contextService tell(AddClassListener(simpleActorEntity1, classOf[TimeMonitor]), guiActor)
-  contextService tell(AddEntityListener(simpleActorEntity3), simpleActorEntity2)
-  contextService tell(NotifyListeners(simpleActorEntity3, classOf[SimpleEntity]), simpleActorEntity3)
-
-  implicit val system = ActorSystem()
-  import system.dispatcher
-  val pipeline: HttpRequest => Future[HttpResponse] = sendReceive
-  val response: Future[HttpResponse] = pipeline(Get("http://google.dk/"))
-  response.map(x => println(x))
-
-  override def receive: Receive = {
-    case msg => println("client received " + msg)
+  override def receive = {
+    case msg => println(msg)
   }
 }
+
+class TimeMonitor extends AbstractTimedMonitor(interval = 2 seconds) {
+  override def receive: Receive = {
+    case Run => run()
+  }
+
+  override def run(): Unit = notifyListeners()
+}
+
+class SimpleEntity extends Entity with EntityListener

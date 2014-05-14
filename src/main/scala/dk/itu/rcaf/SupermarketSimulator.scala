@@ -9,7 +9,7 @@ import dk.itu.rcaf.abilities.AddClassListener
 import scala.util.Random
 import dk.itu.rcaf.example.Room
 
-object Simulator extends SimpleSwingApplication {
+object SupermarketSimulator extends SimpleSwingApplication {
   val numberOfPersonsInRoom = 100
   lazy val rooms: List[Room] = List(
     new Room((for (i <- 1 to numberOfPersonsInRoom) yield new Person).toList, "Grønt"),
@@ -48,7 +48,7 @@ class GuiUpdater extends Entity {
     case msg =>
       Swing.onEDT {
         for {
-          room <- Simulator.rooms
+          room <- SupermarketSimulator.rooms
           person <- room.persons
           if person.readyToMove
         } {
@@ -66,23 +66,23 @@ class GuiUpdater extends Entity {
 //          if (getRandomInt == 3)
 //            person.becomeHappy()
         }
-        Simulator.rooms.foreach(_.repaint())
+        SupermarketSimulator.rooms.foreach(_.repaint())
       }
   }
 
   def moveToNextRoom(person: Person, room: Room) {
-    val nextRoomIndex = Simulator.rooms.indexOf(room) + 1
-    if (Simulator.rooms.size > nextRoomIndex) {
-      Simulator.rooms(nextRoomIndex).persons = person :: Simulator.rooms(nextRoomIndex).persons
+    val nextRoomIndex = SupermarketSimulator.rooms.indexOf(room) + 1
+    if (SupermarketSimulator.rooms.size > nextRoomIndex) {
+      SupermarketSimulator.rooms(nextRoomIndex).persons = person :: SupermarketSimulator.rooms(nextRoomIndex).persons
       exitRoom(person, room)
       person.move(getRandomInt, 0)
     } else exitRoom(person, room)
   }
 
   def moveToPreviousRoom(person: Person, room: Room) {
-    val previousRoomIndex = Simulator.rooms.indexOf(room) - 1
+    val previousRoomIndex = SupermarketSimulator.rooms.indexOf(room) - 1
     if (previousRoomIndex >= 0) {
-      Simulator.rooms(previousRoomIndex).persons = person :: Simulator.rooms(previousRoomIndex).persons
+      SupermarketSimulator.rooms(previousRoomIndex).persons = person :: SupermarketSimulator.rooms(previousRoomIndex).persons
       exitRoom(person, room)
       person.move(room.bounds.getWidth.toInt-person.size, 0)
     } else exitRoom(person, room)

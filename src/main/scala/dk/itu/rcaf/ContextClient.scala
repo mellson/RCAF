@@ -16,5 +16,6 @@ object ContextClient extends App {
   val contextService = system.actorSelection(pathToContextServiceHandler)
 
   val clientName = args.headOption.getOrElse("UnnamedClient")
+
   val client = system.actorOf(Props[ClientActor], clientName)
 }
