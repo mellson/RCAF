@@ -4,7 +4,7 @@ import akka.actor._
 import com.typesafe.config.ConfigFactory
 import dk.itu.rcaf.contextclient.ClientActor
 
-object ContextClient extends App {
+object ContextClientConfig {
   val config = ConfigFactory.load("context_client.conf")
   val system = ActorSystem("ContextClient", config)
 
@@ -14,8 +14,11 @@ object ContextClient extends App {
   val port = config.getInt("backend.port")
   val pathToContextServiceHandler = s"$protocol://$systemName@$host:$port/user/handler"
   val contextService = system.actorSelection(pathToContextServiceHandler)
+}
+
+object ContextClient extends App {
+  import ContextClientConfig._
 
   val clientName = args.headOption.getOrElse("UnnamedClient")
-
   val client = system.actorOf(Props[ClientActor], clientName)
 }

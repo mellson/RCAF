@@ -9,9 +9,5 @@ trait EntityListener extends Actor with ContextItem {
     case StartListening => become(listen)
   }
 
-  def listen: Receive = {
-    case msg: NotifyListeners => println(s"$id was notified by ${msg.subject.path.name}")
-    case StopListening => become(receive)
-    case RemoveAllListener => contextService ! RemoveAllListener
-  }
+  def listen: Receive
 }

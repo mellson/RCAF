@@ -10,17 +10,23 @@ import akka.actor.Cancellable
  */
 abstract case class AbstractTimedMonitor(interval: FiniteDuration) extends AbstractMonitor {
   import context._
-
   private var scheduler: Cancellable = _
 
   override def preStart(): Unit = {
     import scala.concurrent.duration._
+
     scheduler = context.system.scheduler.schedule(
       initialDelay = 0 seconds,
       interval = interval,
-      receiver = self,
-      message = Run
+      this
     )
+
+//    scheduler = context.system.scheduler.schedule(
+//      initialDelay = 0 seconds,
+//      interval = interval,
+//      receiver = self,
+//      message = Run
+//    )
   }
 
   override def postStop(): Unit = {

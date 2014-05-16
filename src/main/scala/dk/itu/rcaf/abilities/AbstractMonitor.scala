@@ -1,5 +1,3 @@
 package dk.itu.rcaf.abilities
 
-trait AbstractMonitor extends Entity {
-  def run(): Unit
-}
+trait AbstractMonitor extends Entity with Runnable

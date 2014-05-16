@@ -6,9 +6,7 @@ case object Entered extends Relationship
 
 case object Left extends Relationship
 
-case class Location(capacity: Int) extends Entity {
-  override def receive: Receive = ???
-}
+case class Location(id: String, capacity: Int) extends ContextItem
 
 class ContextAwareSuperMarket {
   def ReadyToBuy(context: Context): Boolean = context.contains(Entered)

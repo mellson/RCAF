@@ -5,8 +5,8 @@ import scala.concurrent.duration._
 
 class TimeMonitor extends AbstractTimedMonitor(interval = 50 milliseconds) {
   override def receive: Receive = {
-    case Run => run()
+    case msg => println(msg)
   }
 
-  override def run(): Unit = notifyListeners()
+  override def run(): Unit = notifyListeners(null)
 }

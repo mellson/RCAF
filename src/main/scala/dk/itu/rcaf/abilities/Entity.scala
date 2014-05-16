@@ -8,6 +8,8 @@ trait Entity extends Actor with ContextItem {
 
   val getContext: Context = Context(this)
 
-//  def notifyListeners() = contextService ! NotifyListeners(self, getClass)
-  def notifyListeners() = SupermarketSimulator.handler ! NotifyListeners(self, getClass) // TODO rethink this coupling
+  def notifyListeners(event: ContextEvent, clazz: Class[_]) = contextService ! NotifyListeners(self, clazz, event)
+  def notifyListeners(event: ContextEvent) = contextService ! NotifyListeners(self, getClass, event)
+
+//  def notifyListeners(message: Any) = SupermarketSimulator.handler ! NotifyListeners(self, getClass, message) // TODO rethink this coupling
 }
