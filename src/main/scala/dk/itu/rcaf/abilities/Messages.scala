@@ -20,4 +20,4 @@ case class RemoveEntityListener(subject: ActorRef)
 
 case class RemoveClassListener(listener: ActorRef, clazz: Class[_])
 
-case class NotifyListeners(subject: ActorRef, clazz: Class[_], event: ContextEvent)
+case class NotifyListeners(subject: ActorRef, clazz: Class[_], msg: Any)

@@ -45,7 +45,7 @@ class Teacher extends EntityListener {
   }
 
   override def listen = {
-    case msg: NotifyListeners => msg.event.entity ! LectureMessages.ready
+    case NotifyListeners(_,_,event:ContextEvent) => event.entity ! LectureMessages.ready
     case LectureMessages.learningMsg =>
       students = sender :: students
       printInfo()

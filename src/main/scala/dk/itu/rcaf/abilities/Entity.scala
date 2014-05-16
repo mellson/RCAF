@@ -1,6 +1,6 @@
 package dk.itu.rcaf.abilities
 
-import akka.actor.Actor
+import akka.actor.{ActorRef, Actor}
 import dk.itu.rcaf.SupermarketSimulator
 
 trait Entity extends Actor with ContextItem {
@@ -8,8 +8,25 @@ trait Entity extends Actor with ContextItem {
 
   val getContext: Context = Context(this)
 
-  def notifyListeners(event: ContextEvent, clazz: Class[_]) = contextService ! NotifyListeners(self, clazz, event)
-  def notifyListeners(event: ContextEvent) = contextService ! NotifyListeners(self, getClass, event)
+  /**
+   * Notify all listeners.
+   * Standard method where it is the senders class that is used.
+   * @param msg
+   */
+  def notifyListeners(msg: Any) = contextService ! NotifyListeners(self, getClass, msg)
 
-//  def notifyListeners(message: Any) = SupermarketSimulator.handler ! NotifyListeners(self, getClass, message) // TODO rethink this coupling
+  /**
+   * Notify all listeners.
+   * Overloaded method where you add the class whose listeners needs to be notified.
+   * @param msg
+   * @param clazz
+   */
+  def notifyListeners(msg: Any, clazz: Class[_]) = contextService ! NotifyListeners(self, clazz, msg)
+
+  /**
+   * Notify all listeners.
+   * Overload where it is the senders class that is used, but where you provide the context service manually.
+   * @param msg
+   */
+  def notifyListeners(msg: Any, actorRef: ActorRef) = actorRef ! NotifyListeners(self, getClass, msg)
 }

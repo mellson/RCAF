@@ -1,13 +1,13 @@
 package dk.itu.rcaf
 
 import akka.actor._
-import dk.itu.rcaf.contextclient.TimeMonitor
 import dk.itu.rcaf.abilities._
 import dk.itu.rcaf.contextservice.RootHandler
 import scala.swing._
 import dk.itu.rcaf.abilities.AddClassListener
 import scala.util.Random
 import dk.itu.rcaf.example.Room
+import scala.concurrent.duration._
 
 object SupermarketSimulator extends SimpleSwingApplication {
   val numberOfPersonsInRoom = 100
@@ -93,4 +93,12 @@ class GuiUpdater extends Entity {
     val b = Random.nextInt(3)
     if (b > 1) -1 * i else i
   }
+}
+
+class TimeMonitor extends AbstractTimedMonitor(interval = 50 milliseconds) {
+  override def receive: Receive = {
+    case msg => println(msg)
+  }
+
+  override def run(): Unit = notifyListeners("Update", SupermarketSimulator.handler)
 }
