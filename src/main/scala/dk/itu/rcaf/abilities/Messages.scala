@@ -4,10 +4,6 @@ import akka.actor.ActorRef
 
 case object Run
 
-case object StartListening
-
-case object StopListening
-
 case object RemoveAllListener
 
 case class AddContextItem(entity: Entity, clazz: Class[_], relation: Relationship, item: ContextItem)
