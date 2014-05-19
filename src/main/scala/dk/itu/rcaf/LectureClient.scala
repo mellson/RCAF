@@ -5,7 +5,7 @@ import scala.concurrent.duration._
 import akka.actor.{ActorRef, Actor, Props}
 import dk.itu.rcaf.ContextClientConfig._
 import dk.itu.rcaf.abilities._
-import dk.itu.rcaf.example.Location
+import dk.itu.rcaf.simulator.Location
 
 object LectureClientDemo extends App {
   val lectureClient = system.actorOf(Props[LectureClient])

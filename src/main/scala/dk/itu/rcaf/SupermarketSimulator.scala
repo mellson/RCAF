@@ -6,21 +6,21 @@ import dk.itu.rcaf.contextservice.RootHandler
 import scala.swing._
 import dk.itu.rcaf.abilities.AddClassListener
 import scala.util.Random
-import dk.itu.rcaf.example.Room
+import dk.itu.rcaf.simulator.{SimProduct, EmptyRoom, Person, Room}
 import scala.concurrent.duration._
 
 object SupermarketSimulator extends SimpleSwingApplication {
-  val numberOfPersonsInRoom = 100
+  val numberOfPersonsInRoom = 10
   lazy val rooms: List[Room] = List(
     new Room((for (i <- 1 to numberOfPersonsInRoom) yield new Person).toList, "Grønt"),
-    new Room((for (i <- 1 to 0) yield new Person).toList, "Brød"),
-    new Room((for (i <- 1 to 0) yield new Person).toList, "Kolonial"),
-    new Room((for (i <- 1 to 0) yield new Person).toList, "Kasse"))
+    new EmptyRoom("Brød"),
+    new EmptyRoom("Kolonial"),
+    new EmptyRoom("Kasse"))
 
   def top = new MainFrame {
     title = "Superbrugsen Zimulator"
-//    preferredSize = new Dimension(600, 400)
-    preferredSize = maximumSize
+    preferredSize = new Dimension(600, 400)
+    //    preferredSize = maximumSize
 
     val squared = math.sqrt(rooms.size).toInt
     contents = new GridPanel(squared, squared) {
@@ -31,43 +31,63 @@ object SupermarketSimulator extends SimpleSwingApplication {
 
   val system = ActorSystem("ActorSystem")
   val handler = system.actorOf(Props[RootHandler], "handler")
-
-  val timeMonitor = system.actorOf(Props[TimeMonitor], "TimeMonitor")
-  val guiActor = system.actorOf(Props[GuiUpdater], "GuiActor")
-  //  val simpleActorEntity1 = system.actorOf(Props[SimpleActorEntity], "SimpleActorEntity1")
-
-  //  handler tell(AddClassListener(simpleActorEntity1, classOf[TimeMonitor]), simpleActorEntity1)
-  handler tell(AddClassListener(guiActor, classOf[TimeMonitor]), guiActor)
+  val simUpdateActor = system.actorOf(Props[SimUpdater], "SimUpdateActor")
 }
 
-class GuiUpdater extends Entity {
+class SimUpdater extends AbstractTimedMonitor(interval = 50 milliseconds) {
 
-  def exitRoom(person: Person, room: Room) = room.persons = room.persons.filter(_ != person)
+  import SupermarketSimulator._
 
   override def receive: Receive = {
     case msg =>
       Swing.onEDT {
         for {
-          room <- SupermarketSimulator.rooms
+          room <- rooms
           person <- room.persons
-          if person.readyToMove
+          if person.isReadyToBeDrawn
         } {
-          val x = person.x + getRandomInt
-          val y = person.y + 0
-          val width = room.bounds.getWidth
-//          val height = room.bounds.getHeight
-
-          if (x <= 0)          moveToPreviousRoom(person, room)
-          else if (x >= width) moveToNextRoom(person, room)
-          else                 person.move(x, y)
-
-//          if (getRandomInt == 0)
-//            person.becomeAngry()
-//          if (getRandomInt == 3)
-//            person.becomeHappy()
+          shop(person, room)
+          move(person, room)
+          changeMood(person)
         }
         SupermarketSimulator.rooms.foreach(_.repaint())
       }
+  }
+
+  def changeMood(person: Person) = {
+    if (getRandomInt == 0)
+      person.becomeAngry()
+    if (getRandomInt == 3)
+      person.becomeHappy()
+  }
+
+  def exitRoom(person: Person, room: Room) = room.persons = room.persons.filter(_ ne person)
+
+  def shop(person: Person, room: Room) = {
+    val numberOfProductsToBuy = Random.nextInt(3) + 1 // Buy 1, 2 or 3 number of goods
+    val products = for (_ <- 1 to numberOfProductsToBuy) yield new SimProduct // Assign prices to each product
+    products.foreach {
+      product =>
+        if (person.readyToBuy &&
+          person.money >= product.price &&
+          room.productsInRoom > 0 &&
+          person.capacity >= product.weight) {
+          person.money -= product.price
+          room.productsInRoom -= 1
+          person.becomeHappy()
+        } else person.becomeAngry()
+    }
+  }
+
+  def move(person: Person, room: Room) = {
+    val x = person.x + getRandomInt
+    val y = person.y + 1
+    val width = room.bounds.getWidth
+    val height = room.bounds.getHeight
+
+    if (x <= 0 && rooms.indexOf(room) != 0) moveToPreviousRoom(person, room)
+    else if (x >= width) moveToNextRoom(person, room)
+    else person.move(x, y)
   }
 
   def moveToNextRoom(person: Person, room: Room) {
@@ -84,7 +104,7 @@ class GuiUpdater extends Entity {
     if (previousRoomIndex >= 0) {
       SupermarketSimulator.rooms(previousRoomIndex).persons = person :: SupermarketSimulator.rooms(previousRoomIndex).persons
       exitRoom(person, room)
-      person.move(room.bounds.getWidth.toInt-person.size, 0)
+      person.move(room.bounds.getWidth.toInt - person.size, 0)
     } else exitRoom(person, room)
   }
 
@@ -93,12 +113,6 @@ class GuiUpdater extends Entity {
     val b = Random.nextInt(3)
     if (b > 1) -1 * i else i
   }
-}
 
-class TimeMonitor extends AbstractTimedMonitor(interval = 50 milliseconds) {
-  override def receive: Receive = {
-    case msg => println(msg)
-  }
-
-  override def run(): Unit = notifyListeners("Update", SupermarketSimulator.handler)
+  override def run(): Unit = self ! "Update simulation"
 }

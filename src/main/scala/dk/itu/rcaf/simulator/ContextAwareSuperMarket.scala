@@ -1,4 +1,4 @@
-package dk.itu.rcaf.example
+package dk.itu.rcaf.simulator
 
 import dk.itu.rcaf.abilities._
 
