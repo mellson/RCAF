@@ -3,28 +3,41 @@ package dk.itu.rcaf.simulator
 import scala.swing.{FlowPanel, Label}
 import java.awt.{Color, Graphics2D}
 
-class EmptyRoom(roomName: String) extends Room(Nil, roomName)
-
-case class Room(var persons: List[Person], roomName: String) extends FlowPanel {
+case class Room(roomName: String) extends FlowPanel {
+  var open: Boolean = true
+  // Is it possible to move in this room? Or are we maybe stuck in a queue.
+  var productsInRoom = 100 // Percentile of how much product is in this room
+  var workers: List[Worker] = Nil
+  var customers: List[Customer] = Nil
+  
   val label = new Label {
     foreground = Color.white
   }
-  var productsInRoom = 100 // Percentile of how much product is in this room
 
   contents += label
 
   override def paintComponent(g: Graphics2D) {
     g.setBackground(Color.BLACK)
     g.clearRect(0, 0, size.width, size.height)
-    label.text = s"${persons.size} persons in $roomName, $productsInRoom% goods left."
+    label.text = s"${customers.size} persons in $roomName, $productsInRoom% goods left."
 
-    for (person <- persons) {
+    for (person <- customers) {
       person.isReadyToBeDrawn = true
-
-
-
-      g.setColor(person.moodColor)
+      if (person.money == 0)
+        g.setColor(Color.CYAN)
+      else
+        g.setColor(person.moodColor)
       g.fillOval(person.x, person.y, person.size, person.size)
+    }
+
+    var xOffset = 0
+    for (worker <- workers) {
+      if (worker.working)
+        g.setColor(worker.workColor)
+      else
+        g.setColor(worker.relaxedColor)
+      g.fillOval(xOffset, worker.y, worker.size, worker.size)
+      xOffset += 40
     }
   }
 }

@@ -2,7 +2,7 @@ package dk.itu.rcaf.contextservice
 
 import akka.actor.{Props, ActorRef, Actor}
 
-class RootHandler extends Actor {
+class ContextServiceHandler extends Actor {
   var clientToHandlers: Map[ActorRef, ActorRef] = Map.empty
 
   override def receive: Receive = {
