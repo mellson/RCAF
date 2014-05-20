@@ -20,13 +20,6 @@ abstract case class AbstractTimedMonitor(interval: FiniteDuration) extends Abstr
       interval = interval,
       this
     )
-
-//    scheduler = context.system.scheduler.schedule(
-//      initialDelay = 0 seconds,
-//      interval = interval,
-//      receiver = self,
-//      message = Run
-//    )
   }
 
   override def postStop(): Unit = {
