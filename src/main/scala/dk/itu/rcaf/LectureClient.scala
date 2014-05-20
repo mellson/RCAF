@@ -34,8 +34,7 @@ object LectureMessages {
   val ready = "Are you awake and of age?"
 } 
 
-class Teacher extends EntityListener {
-  override val id: String = "Dr. Kontext"
+class Teacher extends Entity {
   var students: List[ActorRef] = Nil
   def clearScreen() = (1 to 30).foreach(_ => println("\n"))
 

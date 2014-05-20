@@ -12,39 +12,39 @@ class ClientHandler extends Actor with Stash {
   var contexts: Map[ActorRef, Context] = HashMap.empty
 
   override def receive: Receive = {
-    case msg: AddContextItem =>
-      val context = Context(msg.entity)
-      context.setContextItem(msg.relation, msg.item)
-      contexts = contexts ++ Map(msg.entity.self -> context)
-      self ! NotifyListeners(msg.entity.self, msg.clazz, ContextEvent(sender, msg.relation, msg.item))
+    case AddContextItem(entity, clazz, relation, item) =>
+      val context = Context(entity)
+      context.setContextItem(relation, item)
+      contexts = contexts ++ Map(entity.self -> context)
+      self ! NotifyListeners(entity.self, clazz, ContextEvent(sender, relation, item))
 
-    case msg: NotifyListeners =>
-      entityListeners.filter(_._1 == msg.subject).foreach(_._2.foreach(_ forward msg))
-      classListeners.filter(_._1 == msg.clazz).foreach(_._2.foreach(_ forward msg))
+    case NotifyListeners(subject, clazz, msg) =>
+      entityListeners.filter(_._1 == subject).foreach(_._2.foreach(_ forward msg))
+      classListeners.filter(_._1 == clazz).foreach(_._2.foreach(_ forward msg))
 
-    case msg: AddClassListener =>
-      val listeners = classListeners getOrElse(msg.clazz, Nil)
-      classListeners = classListeners ++ Map(msg.clazz -> (msg.listener :: listeners))
+    case AddClassListener(listener, clazz) =>
+      val listeners = classListeners getOrElse(clazz, Nil)
+      classListeners = classListeners ++ Map(clazz -> (listener :: listeners))
 
-    case msg: RemoveClassListener =>
-      classListeners get msg.clazz match {
+    case RemoveClassListener(listener, clazz) =>
+      classListeners get clazz match {
         case None =>
         case Some(listeners) =>
-          classListeners = classListeners ++ Map(msg.clazz -> listeners.filterNot(_ == msg.listener))
+          classListeners = classListeners ++ Map(clazz -> listeners.filterNot(_ == listener))
       }
 
-    case msg: AddEntityListener =>
-      val listeners = entityListeners getOrElse(msg.subject, Nil)
-      entityListeners = entityListeners ++ Map(msg.subject -> (sender :: listeners))
+    case AddEntityListener(subject) =>
+      val listeners = entityListeners getOrElse(subject, Nil)
+      entityListeners = entityListeners ++ Map(subject -> (sender :: listeners))
 
-    case msg: RemoveEntityListener =>
-      entityListeners get msg.subject match {
+    case RemoveEntityListener(subject) =>
+      entityListeners get subject match {
         case None =>
         case Some(listeners) =>
-          entityListeners = entityListeners ++ Map(msg.subject -> listeners.filterNot(_ == sender))
+          entityListeners = entityListeners ++ Map(subject -> listeners.filterNot(_ == sender))
       }
 
-    case RemoveAllListener =>
+    case RemoveAllListeners =>
       entityListeners.filter(_._2.contains(sender)).foreach(x => self tell(RemoveEntityListener(x._1), sender))
       classListeners.filter(_._2.contains(sender)).foreach(x => self tell(RemoveClassListener(sender, x._1), sender))
   }

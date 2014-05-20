@@ -7,7 +7,6 @@ import dk.itu.rcaf.contextclient.ClientActor
 object ContextClientConfig {
   val config = ConfigFactory.load("context_client.conf")
   val system = ActorSystem("ContextClient", config)
-
   val protocol = config.getString("backend.protocol")
   val systemName = config.getString("backend.system")
   val host = config.getString("backend.host")

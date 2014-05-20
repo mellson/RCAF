@@ -52,7 +52,7 @@ object SupermarketSimulator extends SimpleSwingApplication {
   simulatorContextService.tell(AddEntityListener(simUpdateActor), supermarketHandler)
 }
 
-class SuperMarketHandler extends EntityListener {
+class SuperMarketHandler extends Entity {
 
   import SupermarketSimulator._
 
