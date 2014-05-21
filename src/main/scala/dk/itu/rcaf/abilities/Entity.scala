@@ -3,10 +3,8 @@ package dk.itu.rcaf.abilities
 import akka.actor.{ActorRef, Actor}
 import dk.itu.rcaf.SupermarketSimulator
 
-trait Entity extends Actor with ContextItem {
+trait Entity extends Actor with ContextItem { //TODO write custom serializer for this
   val id: String = self.path.name
-
-  val getContext: Context = Context(this)
 
   /**
    * Notify all listeners.
@@ -28,5 +26,5 @@ trait Entity extends Actor with ContextItem {
    * Overload where it is the senders class that is used, but where you provide the context service manually.
    * @param msg
    */
-  def notifyListeners(msg: Any, actorRef: ActorRef) = actorRef ! NotifyListeners(self, getClass, msg)
+  def notifyListeners(msg: Any, contextService: ActorRef) = contextService ! NotifyListeners(self, getClass, msg)
 }

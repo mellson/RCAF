@@ -13,10 +13,30 @@ class ClientHandler extends Actor with Stash {
 
   override def receive: Receive = {
     case AddContextItem(entity, clazz, relation, item) =>
-      val context = Context(entity)
-      context.setContextItem(relation, item)
-      contexts = contexts ++ Map(entity.self -> context)
-      self ! NotifyListeners(entity.self, clazz, ContextEvent(sender, relation, item))
+      contexts.get(entity) match {
+        case Some(context) =>
+          context.setContextItem(relation, item)
+          contexts = contexts ++ Map(entity -> context)
+        case None =>
+          val context = Context(entity)
+          context.setContextItem(relation, item)
+          contexts = contexts ++ Map(entity -> context)
+      }
+      self ! NotifyListeners(entity, clazz, ContextEvent(entity, relation, item))
+
+    case RemoveContextItem(entity, clazz, relation, item) =>
+      contexts.get(entity) match {
+        case Some(context) =>
+          context.removeContextItem(item)
+          contexts = contexts ++ Map(entity -> context)
+          self ! NotifyListeners(entity, clazz, ContextEvent(entity, relation, item))
+        case None =>
+      }
+
+    case GetContext(subject) => contexts.get(subject) match {
+      case Some(context) => sender ! context
+      case None =>
+    }
 
     case NotifyListeners(subject, clazz, msg) =>
       entityListeners.filter(_._1 == subject).foreach(_._2.foreach(_ forward msg))

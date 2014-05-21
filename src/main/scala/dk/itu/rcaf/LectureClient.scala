@@ -14,17 +14,19 @@ object LectureClientDemo extends App {
 }
 
 class LectureClient extends AbstractTimedMonitor(1 second) {
-  val classRoom: ContextItem = Location("AUD2", 200)
+  val classRoom: ContextItem = Location("AUD2")
 
   override def run(): Unit = {
     val age = Random.nextInt(80)
     val name = Random.nextString(8)
     val awake = Random.nextBoolean()
     val studentRef = context actorOf Props(Student(name, age, awake))
-    notifyListeners(ContextEvent(studentRef, EnteredLocation, classRoom), classOf[Student])
+    contextService ! AddContextItem(studentRef, classOf[Student], EnteredLocation, classRoom)
   }
 
-  override def receive: Receive = { case msg => println(msg) }
+  override def receive: Receive = {
+    case msg => println(msg)
+  }
 }
 
 object LectureMessages {
@@ -32,10 +34,11 @@ object LectureMessages {
   val sleepMsg = "No, I am sleeping."
   val think = "Think"
   val ready = "Are you awake and of age?"
-} 
+}
 
 class Teacher extends Entity {
   var students: List[ActorRef] = Nil
+
   def clearScreen() = (1 to 30).foreach(_ => println("\n"))
 
   def printInfo() = {
@@ -44,13 +47,13 @@ class Teacher extends Entity {
   }
 
   override def receive = {
-    case NotifyListeners(_,_,event:ContextEvent) => event.entity ! LectureMessages.ready
+    case event: ContextEvent => event.entity ! LectureMessages.ready
     case LectureMessages.learningMsg =>
       students = sender :: students
       printInfo()
       students.foreach(_ ! LectureMessages.think)
     case LectureMessages.sleepMsg =>
-      students = students.filter(_!=sender)
+      students = students.filter(_ != sender)
       printInfo()
   }
 }
@@ -62,6 +65,6 @@ case class Student(name: String, age: Int, awake: Boolean) extends Entity {
     case LectureMessages.think => if (fellAsleep()) sender ! LectureMessages.sleepMsg
     case LectureMessages.ready =>
       if (age > 18 && awake) sender ! LectureMessages.learningMsg
-      else sender ! LectureMessages.sleepMsg 
+      else sender ! LectureMessages.sleepMsg
   }
 }

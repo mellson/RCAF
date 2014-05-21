@@ -1,8 +1,9 @@
 package dk.itu.rcaf.abilities
 
 import scala.collection.immutable.Iterable
+import akka.actor.ActorRef
 
-case class Context(entity: Entity) {
+case class Context(entity: ActorRef) {
   private var context: Map[Relationship, ContextItem] = Map.empty
 
   def setContextItem(relation: Relationship, item: ContextItem) = context = context ++ Map(relation -> item)
