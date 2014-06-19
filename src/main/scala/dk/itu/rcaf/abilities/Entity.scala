@@ -3,7 +3,7 @@ package dk.itu.rcaf.abilities
 import akka.actor.{ActorRef, Actor}
 import dk.itu.rcaf.SupermarketSimulator
 
-trait Entity extends Actor with ContextItem { //TODO write custom serializer for this
+trait Entity extends Actor with ContextItem {
   val id: String = self.path.name
 
   /**

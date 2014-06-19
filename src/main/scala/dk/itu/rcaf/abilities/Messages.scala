@@ -18,6 +18,8 @@ case class NotifyListeners(subject: ActorRef, clazz: Class[_], msg: Any)
 
 case object RemoveAllListeners
 
+case class ContextEvent(entity: ActorRef, relation: Relationship, item: ContextItem)
+
 case class GetContext(subject: ActorRef)
 
 case class GetEntity(name: String)

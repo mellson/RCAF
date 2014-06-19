@@ -1,17 +1,18 @@
 package dk.itu.rcaf.contextservice
 
-import akka.actor.{ActorRef, Actor}
+import akka.actor.{Actor, ActorRef}
 import dk.itu.rcaf.abilities._
-import scala.collection.immutable.HashMap
-import akka.actor.Stash
 
-class ClientHandler extends Actor with Stash {
+import scala.collection.immutable.HashMap
+
+class ClientHandler extends Actor {
   var entityListeners: Map[ActorRef, List[ActorRef]] = HashMap.empty
   var classListeners: Map[Class[_], List[ActorRef]] = HashMap.empty
-
   var contexts: Map[ActorRef, Context] = HashMap.empty
 
   override def receive: Receive = {
+    case msg: ContextItem => println(msg.id)
+
     case AddContextItem(entity, clazz, relation, item) =>
       contexts.get(entity) match {
         case Some(context) =>

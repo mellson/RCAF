@@ -2,16 +2,13 @@ package dk.itu.rcaf
 
 import akka.actor._
 import dk.itu.rcaf.abilities._
+import dk.itu.rcaf.contextservice.ContextServiceHandler
+import dk.itu.rcaf.simulator._
+
+import scala.concurrent._
+import scala.concurrent.duration._
 import scala.swing._
 import scala.util.Random
-import dk.itu.rcaf.simulator._
-import scala.concurrent.duration._
-import dk.itu.rcaf.contextservice.ContextServiceHandler
-import scala.concurrent._
-import dk.itu.rcaf.abilities.AbstractTimedMonitor
-import scala.Some
-import dk.itu.rcaf.abilities.AddEntityListener
-import dk.itu.rcaf.simulator.Room
 
 object SupermarketSimulator extends SimpleSwingApplication {
   lazy val rooms: List[Room] = List(
@@ -20,9 +17,8 @@ object SupermarketSimulator extends SimpleSwingApplication {
     new Room("Kolonial"),
     new Room("Kasse"))
 
-  rooms(3).open = false
-
   // Set the counter room to be closed / queued to start with
+  rooms(3).open = false
 
   def top = new MainFrame {
     title = "Superbrugsen Zimulator"
@@ -54,14 +50,14 @@ object SupermarketSimulator extends SimpleSwingApplication {
 
 class SuperMarketHandler extends Entity {
 
-  import SupermarketSimulator._
+  import dk.itu.rcaf.SupermarketSimulator._
 
   def sensors: List[Basket] = rooms.flatMap(_.customers.map(_.basket))
 
   val numberOfWorkers = rooms.size * 2
   var workers: List[Worker] = (for (i <- 1 to numberOfWorkers) yield new Worker).toList
 
-  import ExecutionContext.Implicits._
+  import scala.concurrent.ExecutionContext.Implicits._
 
   def addMoreCustomers(): Future[Any] = Future {
     blocking(Thread.sleep(2000L)); addCustomer(); addMoreCustomers()
@@ -101,7 +97,7 @@ class SuperMarketHandler extends Entity {
 
 class SimUpdater extends AbstractTimedMonitor(interval = 50 milliseconds) {
 
-  import SupermarketSimulator._
+  import dk.itu.rcaf.SupermarketSimulator._
 
   override def receive: Receive = {
     case _ =>

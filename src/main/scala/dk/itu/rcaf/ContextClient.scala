@@ -18,6 +18,6 @@ object ContextClientConfig {
 object ContextClient extends App {
   import ContextClientConfig._
 
-  val clientName = args.headOption.getOrElse("UnnamedClient")
+  val clientName = args.headOption.getOrElse("GenericContextClient")
   val client = system.actorOf(Props[ClientActor], clientName)
 }

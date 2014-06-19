@@ -12,8 +12,10 @@ class ContextServiceHandler extends Actor {
 
     case msg =>
       // If we don't already have a child, ClientHandler, for this sender add one.
-      if (clientToHandlers get sender equals None)
+      if (clientToHandlers get sender equals None) {
+        println(s"Creating a ClientHandler for ${sender.path.name}")
         clientToHandlers = clientToHandlers ++ Map(sender -> context.actorOf(Props[ClientHandler]))
+      }
 
       // Forward the msg to all children.
       context.children.foreach(_ forward msg)
